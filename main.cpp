@@ -24,6 +24,7 @@ double getPrecision(double value, double precision)
     return (floor((value * pow(10, precision) + 0.5)) / pow(10, precision));
 }
 
+
 int n = 10, m;
 const int prec = 1;     //significant places
 const double eps = 1 / pow(10, prec);
