@@ -31,8 +31,8 @@ double getPrecision(double value, double precision)
 }
 
 
-int n = 10, m;
-const int prec = 5;     //significant places
+int n = 5, m;
+const int prec = 15;     //significant places
 const double eps = 1 / pow(10, prec);
 
 
@@ -90,7 +90,6 @@ int main() {
     if(solution != NULL) showDifferenceMax(x, solution, m);
 
     double *solution3 = solve3DiagonalMatrix(A, n);
-
 
     showDifferenceEu(x, solution3, n);
     showDifferenceMax(x, solution3, n);
@@ -351,29 +350,32 @@ double *solve3DiagonalMatrix(double **t, int n){
         a[i] = t[i][i-1];
         c[i] = t[i][i+1];
 
-        l[i] = (double)a[i] / u[i-1];
+        l[i] = (double)(a[i] / u[i-1]);
         u[i] = t[i][i] - (l[i] * c[i-1]);
     }
-    a[n-1] = t[n-1][n-1];
+    a[n-1] = t[n-1][n-2];
+    l[n-1] = (double)(a[n-1] / u[n-2]);
     u[n-1] = t[n-1][n-1] - (l[n-1] * c[n-2]);
+
 
     // L * y = b
     // U * x = y
 
     y[0] = t[0][n];
     for(int i=1; i<n; i++){
-        y[i] = (double)(t[n][i] - (l[i] * y[i-1]));
+        y[i] = (double)(t[i][n] - (l[i] * y[i-1]));
     }
+
 
     x[n-1] = (double)(y[n-1] / u[n-1]);
     for(int i=n-2; i>=0 ; i--){
         x[i] = (double)((y[i] - (c[i] * x[i+1])) / u[i]);
     }
 
-    cout << "============== ROZWIAZANIE ===============" << endl;
+    cout << "============== ROZWIAZANIE2 ==============" << endl;
     showArray(x, n);
     cout << "==========================================" << endl;
     return x;
 }
 
-// cos nie dziala :(
+// juz dziala ale slabo liczy :/
