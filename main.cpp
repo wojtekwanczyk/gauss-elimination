@@ -11,13 +11,16 @@ void showArray(double *t, int n);
 double **readMatrix(double **t, int n, int m);
 double **readArrayToMatrix(double **t, int n, int m);
 double *gaussElimination(double **t, int n, int m);
-double **generateMatrix(double **t, int n, int m);
+double **generateMatrix1(double **t, int n, int m);
+double **generateMatrix2(double **t, int n, int m);
+double **generateMatrix3(double **t, int n, int m);
 double *readArray(double *p, int n);
 double *generateArray(double *p, int n);
 double *multiplyMatrix(double **A1, int n, int m, double *A2);
 double *getSolutionFromMatrix(double **A, int n, int m);
 void showDifferenceEu(double *t1, double *t2, int n);
 void showDifferenceMax(double *t1, double *t2, int n);
+double *solve3DiagonalMatrix(double **t, int n);
 
 
 // shift significant places before comma, cut everything after comma
@@ -28,8 +31,8 @@ double getPrecision(double value, double precision)
 }
 
 
-int n = 3, m;
-const int prec = 15;     //significant places
+int n = 10, m;
+const int prec = 5;     //significant places
 const double eps = 1 / pow(10, prec);
 
 
@@ -52,7 +55,7 @@ int main() {
 
 
     // Multiplying
-    A = generateMatrix(A, n, m);
+    A = generateMatrix2(A, n, m);
     //readMatrix(A, n, m);
     //x = readArray(x, m);
     x = generateArray(x, m);
@@ -86,6 +89,12 @@ int main() {
     if(solution != NULL) showDifferenceEu(x, solution, m);
     if(solution != NULL) showDifferenceMax(x, solution, m);
 
+    double *solution3 = solve3DiagonalMatrix(A, n);
+
+
+    showDifferenceEu(x, solution3, n);
+    showDifferenceMax(x, solution3, n);
+
     return 0;
 }
 
@@ -113,27 +122,48 @@ double **readMatrix(double **t, int n, int m){
     return t;
 }
 
-
-double **generateMatrix(double **t, int n, int m){
+// first task
+double **generateMatrix1(double **t, int n, int m){
 
     for(int i=0; i<n ; i++){
         for(int j=0; j<m; j++){
-
-            // first task
-            /*
             if(i == 0)  // i == 1, dif notation
                 t[i][j] = 1.0;
             else
                 t[i][j] = 1.0 / ((i+1) + (j+1) - 1);    // diffrent notation from 0 and from 1
+            t[i][j] = getPrecision(t[i][j], prec);
+        }
+    }
+    cout << endl;
+    return t;
+}
 
-            */
-            // second task
 
+// second task
+double **generateMatrix2(double **t, int n, int m){
+
+    for(int i=0; i<n ; i++){
+        for(int j=0; j<m; j++){
             if(j >= i)
                 t[i][j] = double(2 * (i+1)) / (j+1);
             else
                 t[i][j] = t[j][i];
+            t[i][j] = getPrecision(t[i][j], prec);
+        }
+    }
+    cout << endl;
+    return t;
+}
 
+// 3 task
+double **generateMatrix3(double **t, int n, int m){
+
+    for(int i=0; i<n ; i++){
+        for(int j=0; j<m; j++){
+            if(j >= i)
+                t[i][j] = double(2 * (i+1)) / (j+1);
+            else
+                t[i][j] = t[j][i];
             t[i][j] = getPrecision(t[i][j], prec);
         }
     }
@@ -302,3 +332,48 @@ void showDifferenceMax(double *t1, double *t2, int n){
     cout << setprecision(32) << maxi;
     cout << endl << "=========================================" << endl;
 }
+
+
+
+double *solve3DiagonalMatrix(double **t, int n){
+
+    double *l = new double[n];
+    double *u = new double[n];
+    double *a = new double[n];
+    double *c = new double[n];
+
+    double *x = new double[n];
+    double *y = new double[n];
+
+    u[0] = t[0][0];
+    c[0] = t[0][1];
+    for(int i=1; i<n-1;i++){
+        a[i] = t[i][i-1];
+        c[i] = t[i][i+1];
+
+        l[i] = (double)a[i] / u[i-1];
+        u[i] = t[i][i] - (l[i] * c[i-1]);
+    }
+    a[n-1] = t[n-1][n-1];
+    u[n-1] = t[n-1][n-1] - (l[n-1] * c[n-2]);
+
+    // L * y = b
+    // U * x = y
+
+    y[0] = t[0][n];
+    for(int i=1; i<n; i++){
+        y[i] = (double)(t[n][i] - (l[i] * y[i-1]));
+    }
+
+    x[n-1] = (double)(y[n-1] / u[n-1]);
+    for(int i=n-2; i>=0 ; i--){
+        x[i] = (double)((y[i] - (c[i] * x[i+1])) / u[i]);
+    }
+
+    cout << "============== ROZWIAZANIE ===============" << endl;
+    showArray(x, n);
+    cout << "==========================================" << endl;
+    return x;
+}
+
+// cos nie dziala :(
