@@ -13,8 +13,9 @@ double **readArrayToMatrix(double **t, int n, int m);
 double *gaussElimination(double **t, int n, int m);
 double **generateMatrix(double **t, int n, int m);
 double *readArray(double *p, int n);
+double *generateArray(double *p, int n);
 double *multiplyMatrix(double **A1, int n, int m, double *A2);
-double *getSolutionFromArray(double **A, int n, int m);
+double *getSolutionFromMatrix(double **A, int n, int m);
 void showDifferenceEu(double *t1, double *t2, int n);
 void showDifferenceMax(double *t1, double *t2, int n);
 
@@ -23,19 +24,19 @@ double getPrecision(double value, double precision)
     return (floor((value * pow(10, precision) + 0.5)) / pow(10, precision));
 }
 
-const int prec = 15;     //significant places
+int n = 10, m;
+const int prec = 1;     //significant places
 const double eps = 1 / pow(10, prec);
 
 
 int main() {
 
     // define size of the matrix
-    int n,m;
+    //int n,m;
     cout << "Precision = " << eps << endl;
-    cout << "A - Height <space> Width" << endl;
-    cin >> n >> m;
-    //n = 3;
-    //m = 3;
+    cout << "A - matrix size: " << n <<endl;
+    //cin >> n;
+    m = n;
 
     // memory allocation
     double **A = new double*[n];
@@ -47,9 +48,10 @@ int main() {
 
 
     // Multiplying
-    readMatrix(A, n, m);
-    cout << "Array x to multiply: " << endl;
-    x = readArray(x, m);
+    A = generateMatrix(A, n, m);
+    //readMatrix(A, n, m);
+    //x = readArray(x, m);
+    x = generateArray(x, m);
     showMatrix(A, n, m, 0);
     cout << "Multiply by (expected result) =============" << endl;
     showArray(x, m);
@@ -71,7 +73,7 @@ int main() {
         A[i][m] = B[i];
     }
 
-    showMatrix(A, n, m+1, 1);
+    //showMatrix(A, n, m+1, 1);
     double *solution = gaussElimination(A, n, m+1);
 
     if(solution != NULL) showDifferenceEu(x, solution, m);
@@ -107,12 +109,21 @@ double **readMatrix(double **t, int n, int m){
 
 double **generateMatrix(double **t, int n, int m){
 
-    srand(time(NULL));
-
-    cout << "Matrix " << n << " x " << m << " (with spaces):" << endl;
     for(int i=0; i<n ; i++){
         for(int j=0; j<m; j++){
-            t[i][j] = rand()%20;
+            /*
+            if(i == 0)  // i == 1, dif notation
+                t[i][j] = 1.0;
+            else
+                t[i][j] = 1.0 / ((i+1) + (j+1) - 1);    // diffrent notation from 0 and from 1
+            */
+            if(j >= i)
+                t[i][j] = double(2 * (i+1)) / (j+1);
+            else
+                t[i][j] = t[j][i];
+
+            t[i][j] = getPrecision(t[i][j], prec);
+            //cout<<t[i][j]<<endl;
         }
     }
     cout << endl;
@@ -137,7 +148,7 @@ void showMatrix(double **t, int n, int m, int extraSize = 0){
 void showArray(double *t, int n){
 
     for(int i=0; i<n ; i++){
-        cout <<t[i] << "\t\t";
+        cout << setprecision(17) << t[i] << "\t\t";
     }
     cout << endl;
 }
@@ -157,7 +168,7 @@ double *gaussElimination(double **t, int n, int m){
         // k - multiplies every line
         for(int k = i; k<n; k++){
 
-            if( abs(t[factor_line][factor_column]) < eps ){         // == 0
+            if(t[factor_line][factor_column] == 0 ){         // == 0
                 // search for non zero element
                 int l;
                 for(l=k; l<n; l++){
@@ -169,30 +180,30 @@ double *gaussElimination(double **t, int n, int m){
                     double *tmp = t[factor_line];
                     t[factor_line] = t[l];
                     t[l] = tmp;
-                    cout << "Line change!\n";
+                    // cout << "Line change!\n";
                     showMatrix(t, n, m, 1);
                 } else {
-                    cout << "NOT FOUND";
+                    // cout << "NOT FOUND";
                     //range--;
                     factor_column++;
                     continue;
                 }
             }
             factor = t[k][factor_column] / t[factor_line][factor_column];
-            factor = getPrecision(factor, prec);
+            //factor = getPrecision(factor, prec);      nie precyzja obliczen a danych wejsciowych
 
 
             // j - subtract every column in k line
             int sum = 0;
             for(int j=factor_column; j<m; j++){
                 t[k][j] = t[k][j] - factor * t[factor_line][j];
-                t[k][j] = getPrecision(t[k][j], prec);
+                //t[k][j] = getPrecision(t[k][j], prec);
                 sum += t[k][j];
             }
-            if(abs(sum - t[k][m-1]) < eps) range--;
-            if(abs(sum - t[k][m-1]) < eps && abs(t[k][m-1]) > eps ) conflict++;
-            if(abs(sum - t[k][m-1]) < eps && abs(t[k][m-1]) < eps ) identity++;
-            showMatrix(t, n ,m, 1);
+            if(sum - t[k][m-1] == 0) range--;
+            if(sum - t[k][m-1] == 0 && t[k][m-1] != 0 ) conflict++;
+            if(sum - t[k][m-1] == 0 && t[k][m-1] == 0) identity++;
+            //showMatrix(t, n ,m, 1);
         }
         //if(t[factor_line][factor_column] < eps) range--;    // == 0
         factor_column++;
@@ -203,8 +214,8 @@ double *gaussElimination(double **t, int n, int m){
     if(conflict != 0) cout << "Uklad sprzeczny!!!" << endl;
     else if(identity != 0) cout << "Uklad tozsamosciowy!!!" << endl;
     else {
-        double *solution = getSolutionFromArray(t, n, m);
-        cout << "=== ROZWIAZANIE ==========================" << endl;
+        double *solution = getSolutionFromMatrix(t, n, m);
+        cout << "============== ROZWIAZANIE ===============" << endl;
         showArray(solution, n);
         cout << "==========================================" << endl;
         return solution;
@@ -220,15 +231,15 @@ double *multiplyMatrix(double **A1, int n, int m, double *A2){
         p[i] = 0;
         for(int j=0; j<m; j++){
             p[i] += A1[i][j] * A2[j];
-            p[i] = getPrecision(p[i], prec);
+            //p[i] = getPrecision(p[i], prec);
         }
     }
-
     return p;
 }
 
 
 double *readArray(double *p, int n){
+    cout << "Array x to multiply: " << endl;
     for(int i=0; i<n ; i++){
         cin >> p[i];
     }
@@ -236,8 +247,22 @@ double *readArray(double *p, int n){
     return p;
 }
 
+double *generateArray(double *p, int n){
+    cout << "Array x to multiply: " << endl;
+    srand(time(NULL));
+    for(int i=0; i<n ; i++){
+        int x = rand() % 2;
+        if(x == 0)
+            p[i] = 1.0;
+        else
+            p[i] = -1.0;
+        //cout << p[i] << "\t";
+    }
+    cout << endl;
+    return p;
+}
 
-double *getSolutionFromArray(double **A, int n, int m){
+double *getSolutionFromMatrix(double **A, int n, int m){
     double *solution = new double[n];
     for(int i=0; i<n; i++) solution[i] = 0;
 
