@@ -16,27 +16,18 @@ double *readArray(double *p, int n);
 double *multiplyMatrix(double **A1, int n, int m, double *A2);
 double *getSolutionFromArray(double **A, int n, int m);
 void showDifferenceEu(double *t1, double *t2, int n);
+void showDifferenceMax(double *t1, double *t2, int n);
 
 double getPrecision(double value, double precision)
 {
     return (floor((value * pow(10, precision) + 0.5)) / pow(10, precision));
 }
 
-const int prec = 12;     //significant places
-const double eps = 1e-12;
-
+const int prec = 15;     //significant places
+const double eps = 1 / pow(10, prec);
 
 
 int main() {
-
-    /*
-    cout.precision(12);
-    double d = 12.12344678;
-    d = getPrecision(d, prec);
-    cout<<d<<endl;
-    */
-
-
 
     // define size of the matrix
     int n,m;
@@ -55,17 +46,7 @@ int main() {
     double *B = new double[m];
 
 
-
-    //double a = nan("");
-    //cout<<a<<endl<<endl;
-
-
-
-
-
     // Multiplying
-
-
     readMatrix(A, n, m);
     cout << "Array x to multiply: " << endl;
     x = readArray(x, m);
@@ -78,16 +59,14 @@ int main() {
     showArray(B, m);
     cout<<endl;
 
-
-
+    // only for testing
     // Resolving
     //A = readMatrix(A, n, m);
     //A = readArrayToMatrix(A, n, m);
     //or
     //generateMatrix(A, n, m);
 
-    // copy the result to full A matrix -- only with first part
-
+    // copy the result to full A matrix -- only with multiplying part
     for(int i=0; i<m; i++){
         A[i][m] = B[i];
     }
@@ -96,8 +75,7 @@ int main() {
     double *solution = gaussElimination(A, n, m+1);
 
     if(solution != NULL) showDifferenceEu(x, solution, m);
-
-
+    if(solution != NULL) showDifferenceMax(x, solution, m);
 
     return 0;
 }
@@ -126,6 +104,7 @@ double **readMatrix(double **t, int n, int m){
     return t;
 }
 
+
 double **generateMatrix(double **t, int n, int m){
 
     srand(time(NULL));
@@ -140,6 +119,7 @@ double **generateMatrix(double **t, int n, int m){
     return t;
 }
 
+
 void showMatrix(double **t, int n, int m, int extraSize = 0){
 
     for(int i=0; i<n ; i++){
@@ -153,6 +133,7 @@ void showMatrix(double **t, int n, int m, int extraSize = 0){
     cout << endl;
 }
 
+
 void showArray(double *t, int n){
 
     for(int i=0; i<n ; i++){
@@ -160,6 +141,7 @@ void showArray(double *t, int n){
     }
     cout << endl;
 }
+
 
 double *gaussElimination(double **t, int n, int m){
     double factor;
@@ -254,6 +236,7 @@ double *readArray(double *p, int n){
     return p;
 }
 
+
 double *getSolutionFromArray(double **A, int n, int m){
     double *solution = new double[n];
     for(int i=0; i<n; i++) solution[i] = 0;
@@ -269,24 +252,28 @@ double *getSolutionFromArray(double **A, int n, int m){
 }
 
 
-// nie dziala roznica euclidesowa!!!!!
-
-
 void showDifferenceEu(double *t1, double *t2, int n){
     double *dif = new double[n];
 
     cout << endl << "======== Euclides difference: ===========" << endl;
     for(int i=0; i<n; i++){
-        dif[i] = t2[i] - t1[i];
-        cout << setprecision(30) << dif[i] << "\t";
+        dif[i] = abs(t2[i] - t1[i]);
+        cout << setprecision(32) << dif[i] << "\t";
     }
     cout << endl << "=========================================" << endl;
 }
 
+void showDifferenceMax(double *t1, double *t2, int n){
 
+    cout << endl << "======== Maximum difference: ===========" << endl;
+    double maxi = 0;
+    double tmp;
+    for(int i=0; i<n; i++){
+        tmp = abs(t2[i] - t1[i]);
+        if(tmp > maxi)
+            maxi = tmp;
+    }
+    cout << setprecision(32) << maxi;
 
-
-
-
-
-
+    cout << endl << "=========================================" << endl;
+}
