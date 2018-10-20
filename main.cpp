@@ -19,14 +19,17 @@ double *getSolutionFromMatrix(double **A, int n, int m);
 void showDifferenceEu(double *t1, double *t2, int n);
 void showDifferenceMax(double *t1, double *t2, int n);
 
+
+// shift significant places before comma, cut everything after comma
+// then shift everything back again
 double getPrecision(double value, double precision)
 {
     return (floor((value * pow(10, precision) + 0.5)) / pow(10, precision));
 }
 
 
-int n = 10, m;
-const int prec = 1;     //significant places
+int n = 3, m;
+const int prec = 15;     //significant places
 const double eps = 1 / pow(10, prec);
 
 
@@ -71,8 +74,11 @@ int main() {
 
     // copy the result to full A matrix -- only with multiplying part
     for(int i=0; i<m; i++){
+        B[i] = getPrecision(B[i], prec);
         A[i][m] = B[i];
     }
+    cout << "Result with precision cut: " << endl;
+    showArray(B, m);
 
     //showMatrix(A, n, m+1, 1);
     double *solution = gaussElimination(A, n, m+1);
@@ -112,19 +118,23 @@ double **generateMatrix(double **t, int n, int m){
 
     for(int i=0; i<n ; i++){
         for(int j=0; j<m; j++){
+
+            // first task
             /*
             if(i == 0)  // i == 1, dif notation
                 t[i][j] = 1.0;
             else
                 t[i][j] = 1.0 / ((i+1) + (j+1) - 1);    // diffrent notation from 0 and from 1
+
             */
+            // second task
+
             if(j >= i)
                 t[i][j] = double(2 * (i+1)) / (j+1);
             else
                 t[i][j] = t[j][i];
 
             t[i][j] = getPrecision(t[i][j], prec);
-            //cout<<t[i][j]<<endl;
         }
     }
     cout << endl;
@@ -169,11 +179,11 @@ double *gaussElimination(double **t, int n, int m){
         // k - multiplies every line
         for(int k = i; k<n; k++){
 
-            if(t[factor_line][factor_column] == 0 ){         // == 0
+            if(t[factor_line][factor_column] == 0 ){
                 // search for non zero element
                 int l;
                 for(l=k; l<n; l++){
-                    if( abs(t[l][factor_column]) > 0) break;        // != 0
+                    if(t[l][factor_column] != 0) break;
                 }
 
                 if(l<n){
@@ -181,32 +191,24 @@ double *gaussElimination(double **t, int n, int m){
                     double *tmp = t[factor_line];
                     t[factor_line] = t[l];
                     t[l] = tmp;
-                    // cout << "Line change!\n";
                     showMatrix(t, n, m, 1);
                 } else {
-                    // cout << "NOT FOUND";
-                    //range--;
                     factor_column++;
                     continue;
                 }
             }
             factor = t[k][factor_column] / t[factor_line][factor_column];
-            //factor = getPrecision(factor, prec);      nie precyzja obliczen a danych wejsciowych
-
 
             // j - subtract every column in k line
             int sum = 0;
             for(int j=factor_column; j<m; j++){
                 t[k][j] = t[k][j] - factor * t[factor_line][j];
-                //t[k][j] = getPrecision(t[k][j], prec);
                 sum += t[k][j];
             }
             if(sum - t[k][m-1] == 0) range--;
             if(sum - t[k][m-1] == 0 && t[k][m-1] != 0 ) conflict++;
             if(sum - t[k][m-1] == 0 && t[k][m-1] == 0) identity++;
-            //showMatrix(t, n ,m, 1);
         }
-        //if(t[factor_line][factor_column] < eps) range--;    // == 0
         factor_column++;
         factor_line++;
     }
@@ -232,7 +234,6 @@ double *multiplyMatrix(double **A1, int n, int m, double *A2){
         p[i] = 0;
         for(int j=0; j<m; j++){
             p[i] += A1[i][j] * A2[j];
-            //p[i] = getPrecision(p[i], prec);
         }
     }
     return p;
@@ -257,7 +258,6 @@ double *generateArray(double *p, int n){
             p[i] = 1.0;
         else
             p[i] = -1.0;
-        //cout << p[i] << "\t";
     }
     cout << endl;
     return p;
@@ -300,6 +300,5 @@ void showDifferenceMax(double *t1, double *t2, int n){
             maxi = tmp;
     }
     cout << setprecision(32) << maxi;
-
     cout << endl << "=========================================" << endl;
 }
